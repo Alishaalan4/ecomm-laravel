@@ -1,0 +1,38 @@
+Step 2️⃣
+
+Migrations (this is next)
+Order:
+
+users
+
+categories
+
+products
+
+carts
+
+cart_items
+
+orders
+
+order_items
+
+Step 3️⃣
+
+Models + relationships
+
+Step 4️⃣
+
+Auth (Sanctum)
+
+Step 5️⃣
+
+Cart logic
+
+Step 6️⃣
+
+Checkout logic
+
+Step 7️⃣
+
+Admin panel APIs

@@ -1,0 +1,23 @@
+1-create the middlewawre
+php artisan make:middleware AdminMiddleware
+
+
+2- check token in the middleware 
+    public function handle(Request $request, Closure $next)
+    {
+        $user = $request->user();
+
+        if (!$user || !$user->isAdmin()) {
+            return response()->json([
+                'message' => 'Unauthorized. Admins only.'
+            ], 403);
+        }
+
+        return $next($request);
+    }
+
+3- add the middleware to the kernel.php
+protected $routeMiddleware = [
+    // existing middlewares...
+    'admin' => \App\Http\Middleware\AdminMiddleware::class,
+];

@@ -1,0 +1,232 @@
+User
+ ├── hasOne Cart
+ ├── hasMany Orders
+
+Cart
+ ├── hasMany CartItems
+
+CartItem
+ ├── belongsTo Product
+
+Category
+ ├── hasMany Products
+
+Order
+ ├── hasMany OrderItems
+ ├── belongsTo User
+
+
+ relations work:
+ 🧠 Big Picture (Mental Model)
+
+This system has 4 main phases:
+
+1️⃣ Browsing (no auth)
+2️⃣ Authentication
+3️⃣ Cart lifecycle
+4️⃣ Order & checkout lifecycle
+
+Everything revolves around User → Cart → Order
+
+1️⃣ Browsing Products (No Auth)
+What happens
+
+User opens app / website
+
+No login required
+
+Models involved
+
+Category
+
+Product
+
+Flow
+Category → Products
+
+
+Example:
+
+Category::with('products')->get();
+Product::with('category')->get();
+
+
+📌 Nothing touches User, Cart, or Order here.
+
+2️⃣ Authentication Flow
+User registers / logs in
+
+User record is created
+
+Token is issued (Sanctum)
+
+Important design decision
+
+👉 Cart is NOT created yet
+
+Why?
+
+Not all users shop
+
+Saves DB clutter
+
+3️⃣ Cart Lifecycle (Core Logic)
+
+This is the heart of the system.
+
+🛒 First Add to Cart
+Trigger
+
+User clicks “Add to Cart”
+
+Flow (very important)
+
+1️⃣ Check authentication
+2️⃣ Check if user already has a cart
+3️⃣ If not → create one
+
+Models involved
+User → Cart → CartItem → Product
+
+Conceptual flow
+$user = auth()->user();
+
+$cart = $user->cart ?? Cart::create(['user_id' => $user->id]);
+
+
+Then:
+
+CartItem::updateOrCreate(
+    ['cart_id' => $cart->id, 'product_id' => $productId],
+    ['quantity' => DB::raw('quantity + 1')]
+);
+
+
+📌 Stock is not reduced yet
+
+➕➖ Update Quantity
+Flow
+
+User increases/decreases quantity
+
+Only cart_items.quantity changes
+
+📌 Product stock still untouched
+
+❌ Remove Item
+
+Delete row from cart_items
+
+Cart still exists
+
+🧹 Empty Cart
+
+Delete all cart_items
+
+Keep cart
+
+4️⃣ Checkout Flow (CRITICAL)
+
+This is where cart → order conversion happens.
+
+🧾 User clicks Checkout
+Step 1 — Validate input
+
+Depending on payment_method:
+
+Method	Required
+cod	address
+wish	phone_number
+Step 2 — Read cart
+$cart = $user->cart->load('items.product');
+
+
+📌 If cart is empty → block checkout
+
+Step 3 — Calculate total
+$total = 0;
+
+foreach ($cart->items as $item) {
+    $total += $item->quantity * $item->product->price;
+}
+
+Step 4 — Create Order
+Models involved
+User → Order → OrderItem → Product
+
+$order = Order::create([
+    'user_id' => $user->id,
+    'payment_method' => 'cod',
+    'address' => $address,
+    'total_price' => $total,
+]);
+
+Step 5 — Move Cart Items → Order Items
+foreach ($cart->items as $item) {
+    OrderItem::create([
+        'order_id' => $order->id,
+        'product_id' => $item->product_id,
+        'quantity' => $item->quantity,
+        'price' => $item->product->price,
+    ]);
+
+    // reduce stock
+    $item->product->decrement('stock', $item->quantity);
+}
+
+
+📌 Price is SNAPSHOTED
+📌 Stock reduced ONLY NOW
+
+Step 6 — Clear Cart
+$cart->items()->delete();
+
+5️⃣ Order Status Lifecycle
+Default
+pending
+
+Admin updates:
+pending → shipped → delivered
+
+
+or:
+
+pending → cancelled
+
+
+📌 User can ONLY view status
+📌 Admin controls status
+
+6️⃣ User Profile Flow
+Models involved
+User → Orders → OrderItems
+
+
+User views:
+
+$user->orders()->with('items.product')->get();
+
+
+User updates:
+
+name
+
+email
+
+profile_image
+
+❌ Cannot edit role or orders
+
+7️⃣ Admin Flow
+
+Admin is just a User with role = admin
+
+Admin abilities
+Action	Models
+Manage users	User
+Manage products	Product, Category
+Manage orders	Order, OrderItem
+
+Admin routes are protected by:
+
+isAdmin()

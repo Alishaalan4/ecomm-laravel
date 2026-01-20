@@ -14,6 +14,7 @@ use App\Http\Controllers\API\User\ProfileController;
 use App\Http\Controllers\API\Admin\UserController as AdminUserController;
 use App\Http\Controllers\API\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\API\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\API\Admin\CategoryController as AdminCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -92,7 +93,7 @@ Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logou
 Route::middleware('auth:sanctum')->prefix('user')->group(function () {
     // profile routes
     Route::get('/profile', [ProfileController::class, 'show']);
-    Route::put('/profile/update', [ProfileController::class, 'update']);
+    Route::post('/profile/update', [ProfileController::class, 'update']);
     Route::post('/profile/changePassword',[ProfileController::class,'changePassword']);
     // cart routes 
     Route::get('/cart', [CartController::class, 'index']);
@@ -111,11 +112,13 @@ Route::middleware('auth:sanctum')->prefix('user')->group(function () {
 
 
 // admin routes , protected 
-Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum','admin'])->prefix('admin')->group(function () {
     // users routes 
     Route::get('/users', [AdminUserController::class, 'index']);
     Route::get('/users/{id}', [AdminUserController::class, 'show']);
+    Route::post('/users/add',[AdminUserController::class,'create']);
     Route::put('/users/{id}', [AdminUserController::class, 'update']);
+    Route::post('/users/{id}/updatePassword', [AdminUserController::class, 'updatePassword']);
     Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
 
     // products routes 
@@ -129,4 +132,11 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/orders', [AdminOrderController::class, 'index']);
     Route::get('/orders/{id}', [AdminOrderController::class, 'show']);
     Route::put('/orders/{id}/status', [AdminOrderController::class, 'update']);
+
+    // category routes
+    Route::get('/categories', [AdminCategoryController::class, 'index']);
+    Route::get('/categories/{id}', [AdminCategoryController::class, 'show']);
+    Route::post('/categories/create', [AdminCategoryController::class, 'create']);
+    Route::put('/categories/{id}', [AdminCategoryController::class, 'update']);
+    Route::delete('/categories/{id}', [AdminCategoryController::class, 'destroy']);
 });

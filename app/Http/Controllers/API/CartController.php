@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -34,25 +35,52 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1'
         ]);
 
-        // check if authenticated user have a card or not 
         $user = $request->user();
         $cart = $user->cart ?? Cart::create(['user_id' => $user->id]);
 
-        $cartItem = $cart->items()->where('product_id', $validate['product_id'])->first();
-        if ($cartItem)
-        {
-            //incremenet the quantity
-            $cartItem->quantity += $validate['quantity'];
-            $cartItem->save();
-        }
-        else
-        {
+        // 🔴 Load product
+        $product = Product::findOrFail($validate['product_id']);
+
+        $cartItem = $cart->items()
+            ->where('product_id', $product->id)
+            ->first();
+
+        if ($cartItem) {
+
+            $newQuantity = $cartItem->quantity + $validate['quantity'];
+
+            // 🔴 STOCK CHECK
+            if ($newQuantity > $product->stock) {
+                return response()->json([
+                    'msg' => 'Quantity exceeds available stock',
+                    'available_stock' => $product->stock
+                ], 422);
+            }
+
+            $cartItem->update([
+                'quantity' => $newQuantity
+            ]);
+
+        } else {
+
+            // 🔴 STOCK CHECK
+            if ($validate['quantity'] > $product->stock) {
+                return response()->json([
+                    'msg' => 'Not enough stock available',
+                    'available_stock' => $product->stock
+                ], 422);
+            }
+
             $cart->items()->create([
-                'product_id' =>$validate['product_id'],
-                'quantity'=> $validate['quantity'],
+                'product_id' => $product->id,
+                'quantity' => $validate['quantity'],
             ]);
         }
-        return response()->json(["msg" => "product added to card",$cart]);
+
+        return response()->json([
+            "msg" => "Product added to cart successfully",
+            "cart" => $cart->load('items.product')
+    ]);
     }
 
     /**

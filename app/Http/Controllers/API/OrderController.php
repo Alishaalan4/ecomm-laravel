@@ -14,50 +14,87 @@ use App\Models\OrderItem;
  */
 class OrderController extends Controller
 {
-    public function checkout(Request $request)
-    {
-        $user = $request->user();
-        $cart = $user->cart()->with('items.product')->first();
-        if (!$cart || $cart->items->isEmpty())
-        {
-            return response()->json([
-                'message' => 'Cart is empty'
-            ], 400);
-        }
 
-        $validate = $request->validate([
-            'payment_method' => 'required|in:cod,wish_money',
-            'address'        => 'required_if:payment_method,cod|string|max:255',
-            'phone_number'   => 'required_if:payment_method,wish_money|string|max:20',
-        ]);
 
-        $order = Order::create([
-            'user_id'=>$user->id,
-            'payment_method'=>$validate['payment_method'],
-            'address'=>$validate['address'],
-            'phone_number'=>$validate['phone_number'],
-            'status'=>'pending',
-            'total_price'=>$cart->items->sum(fn($item) => $item->quantity * $item->product->price)
-        ]);
 
-        foreach ($cart->items as $item) {
-            OrderItem::create([
-                'order_id'=>$order->id,
-                'product_id'=>$item->product_id,
-                'quantity'=>$item->quantity,
-                'price'=>$item->product->price
-            ]);
 
-            $item->product->decrement('stock',$item->quantity);
-        }
 
-        $cart->items()->delete();
 
+
+/**
+ * Summary of checkout
+ * @param Request $request
+ * @return \Illuminate\Http\JsonResponse
+ */
+
+
+
+/*
+  Key fixes
+  OrderItem uses price (unit price)
+
+  Order uses total_price (sum of all items × quantity)
+
+  No total_price column in order_items → avoids SQL errors
+
+  Stock is decremented correctly
+
+  Cart is cleared after order creation
+
+  Payment validation remains intact
+ */
+
+
+  
+public function checkout(Request $request)
+{
+    $user = $request->user();
+    $cart = $user->cart()->with('items.product')->first();
+
+    if (!$cart || $cart->items->isEmpty()) {
         return response()->json([
-            'message' => 'Order created successfully',
-            'order' => $order
-        ], 201);
+            'message' => 'Cart is empty'
+        ], 400);
     }
+
+    $validate = $request->validate([
+        'payment_method' => 'required|in:cod,wish',
+        'address'        => 'required_if:payment_method,cod|string|max:255',
+        'phone_number'   => 'required_if:payment_method,wish|string|max:20',
+    ]);
+
+    $totalPrice = $cart->items->sum(
+        fn ($item) => $item->quantity * $item->product->price
+    );
+
+    $order = Order::create([
+        'user_id'        => $user->id,
+        'payment_method' => $validate['payment_method'],
+        'address'        => $validate['address'] ?? null,
+        'phone_number'   => $validate['phone_number'] ?? null,
+        'status'         => 'pending',
+        'total_price'    => $totalPrice, // total for the order
+    ]);
+
+    foreach ($cart->items as $item) {
+        OrderItem::create([
+            'order_id'   => $order->id,
+            'product_id' => $item->product_id,
+            'quantity'   => $item->quantity,
+            'price'      => $item->product->price, // ✅ unit price
+        ]);
+
+        $item->product->decrement('stock', $item->quantity);
+    }
+
+    $cart->items()->delete();
+
+    return response()->json([
+        'message' => 'Order created successfully',
+        'order' => $order
+    ], 201);
+}
+
 
 
     /*

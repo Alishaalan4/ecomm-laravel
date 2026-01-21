@@ -26,12 +26,12 @@ class ProductController extends Controller
             'stock'       => 'required|integer|min:0',
             'category_id' => 'required|exists:categories,id',
             'size'        => 'nullable|string',
-            'photo'       => 'nullable|image'
+            'image'       => 'nullable|image'
         ]);
 
 
-        if ($request->hasFile('photo')) {
-            $validated['photo'] = $request->file('photo')
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')
                 ->store('products', 'public');
         }
 
@@ -48,18 +48,18 @@ class ProductController extends Controller
             ], 404);
         }
         $validated = $request->validate([
-            'name'        => 'required|string',
-            'description' => 'required|string',
-            'price'       => 'required|numeric',
-            'stock'       => 'required|integer|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'size'        => 'nullable|string',
-            'photo'       => 'nullable|image'
+            'name'        => 'sometimes|string',
+            'description' => 'sometimes|string',
+            'price'       => 'sometimes|numeric',
+            'stock'       => 'sometimes|integer|min:0',
+            'category_id' => 'sometimes|exists:categories,id',
+            'size'        => 'sometimes|string',
+            'image'       => 'sometimes|image'
         ]);
 
-        if ($request->hasFile('photo')) {
-            $validated['photo'] = $request->file('photo')
-                ->store('products', 'public');
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')
+                ->store('products', 'public');      
         }
 
         $product->update($validated);
@@ -76,8 +76,8 @@ class ProductController extends Controller
                 'message' => 'Product not found'
             ], 404);
         }
-        if ($product->photo) {
-            Storage::disk('public')->delete($product->photo);
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
         }
 
         $product->delete();

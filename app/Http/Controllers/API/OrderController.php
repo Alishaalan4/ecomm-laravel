@@ -104,7 +104,7 @@ public function checkout(Request $request)
     public function index(Request $request)
     {
         $orders = $request->user()->orders()->with('items.product')->get();
-        return response()->json([$orders], 200);
+        return response()->json($orders, 200);
     }
     
 
@@ -120,7 +120,7 @@ public function checkout(Request $request)
                 'message' => 'Order not found'
             ], 404);
         }
-        return response()->json([$order], 200);
+        return response()->json($order, 200);
     }
 
 }

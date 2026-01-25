@@ -88,11 +88,11 @@ class CartController extends Controller
      * Update quantity of cart item
      * body: product_id, quantity
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request)
     {
         $validate = $request->validate([
             'product_id' =>'required|exists:products,id',
-            'qunatity' => 'required|integer|min:1'
+            'quantity' => 'required|integer|min:1'
         ]);
         $cart = $request->user()->cart;
         if (!$cart)
@@ -108,7 +108,7 @@ class CartController extends Controller
                 "msg" => "cart item not found",
             ],404);
         }
-        $cartItems->quantity = $validate['qunatity'];
+        $cartItems->quantity = $validate['quantity'];
         $cartItems->save();
         return response()->json([
             "msg" => "cart item updated",

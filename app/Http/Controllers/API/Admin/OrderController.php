@@ -20,7 +20,7 @@ class OrderController extends Controller
                 "msg"=>"No orders found",
             ],404);
         }
-        return response()->json([$order],200);
+        return response()->json($order,200);
     }
 
     /**
@@ -36,7 +36,7 @@ class OrderController extends Controller
                 "msg"=>"Order not found"
             ],404);
         }
-        return response()->json([$order],200);
+        return response()->json($order,200);
     }
 
     /**

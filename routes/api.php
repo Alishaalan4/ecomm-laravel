@@ -15,7 +15,7 @@ use App\Http\Controllers\API\Admin\UserController as AdminUserController;
 use App\Http\Controllers\API\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\API\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\API\Admin\CategoryController as AdminCategoryController;
-
+use App\Http\Controllers\API\Admin\DashboardController as AdminDashboardController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -113,6 +113,10 @@ Route::middleware('auth:sanctum')->prefix('user')->group(function () {
 
 // admin routes , protected 
 Route::middleware(['auth:sanctum','admin'])->prefix('admin')->group(function () {
+    
+    // admin dashboard routes 
+    Route::get('/dashboard', [AdminDashboardController::class, 'index']);
+    
     // users routes 
     Route::get('/users', [AdminUserController::class, 'index']);
     Route::get('/users/{id}', [AdminUserController::class, 'show']);
@@ -136,7 +140,7 @@ Route::middleware(['auth:sanctum','admin'])->prefix('admin')->group(function () 
     // category routes
     Route::get('/categories', [AdminCategoryController::class, 'index']);
     Route::get('/categories/{id}', [AdminCategoryController::class, 'show']);
-    Route::post('/categories/create', [AdminCategoryController::class, 'create']);
+    Route::post('/categories/create', [AdminCategoryController::class, 'store']);
     Route::put('/categories/{id}', [AdminCategoryController::class, 'update']);
     Route::delete('/categories/{id}', [AdminCategoryController::class, 'destroy']);
 });

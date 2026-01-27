@@ -18,7 +18,7 @@ class UserController extends Controller
         $users = User::latest()->paginate(10);
         if ($users)
         {
-            return response()->json([$users], 200);
+            return response()->json($users, 200);
         }
         return response()->json([
             'message' => 'No users found'
@@ -37,7 +37,7 @@ class UserController extends Controller
                 "msg"=>"User not Found"
             ], 404);
         }
-        return response()->json([$user],200);
+        return response()->json($user,200);
     }
     
     /**

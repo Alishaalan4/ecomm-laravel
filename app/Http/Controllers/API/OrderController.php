@@ -63,6 +63,15 @@ public function checkout(Request $request)
         'phone_number'   => 'required_if:payment_method,wish|string|max:20',
     ]);
 
+    // Check availability loop
+    foreach ($cart->items as $item) {
+        if ($item->product->stock < $item->quantity) {
+            return response()->json([
+                'message' => 'Product ' . $item->product->name . ' has insufficient stock (Available: ' . $item->product->stock . ')',
+            ], 400);
+        }
+    }
+
     $totalPrice = $cart->items->sum(
         fn ($item) => $item->quantity * $item->product->price
     );

@@ -18,7 +18,7 @@ class CartController extends Controller
         $cart = $request->user()->cart()->with('items.product')->first();
         if (!$cart)
         {
-            return response()->json([ [] ]);
+            return response()->json([]);
         }
         return response()->json($cart);
     }
@@ -38,8 +38,8 @@ class CartController extends Controller
         $user = $request->user();
         $cart = $user->cart ?? Cart::create(['user_id' => $user->id]);
 
-        // 🔴 Load product
-        $product = Product::findOrFail($validate['product_id']);
+        // load product
+        $product = Product::find($validate['product_id']);
 
         $cartItem = $cart->items()
             ->where('product_id', $product->id)
@@ -49,7 +49,7 @@ class CartController extends Controller
 
             $newQuantity = $cartItem->quantity + $validate['quantity'];
 
-            // 🔴 STOCK CHECK
+            // STOCK CHECK
             if ($newQuantity > $product->stock) {
                 return response()->json([
                     'msg' => 'Quantity exceeds available stock',

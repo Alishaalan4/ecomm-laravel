@@ -10,7 +10,7 @@ class ProfileController extends Controller
 {
     public function show(Request $request)
     {
-        $user = $request->user("");
+        $user = $request->user();
         return response()->json($user,200);
     }
 
@@ -41,20 +41,20 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        // 1️⃣ Validate input
+        // validate input
         $request->validate([
             'old_password' => 'required|string',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        // 2️⃣ Check old password
+        //  check old password
         if (!Hash::check($request->old_password, $user->password)) {
             return response()->json([
                 'message' => 'Old password is incorrect',
             ], 400);
         }
 
-        // 3️⃣ Update password
+        // 3 update password
         $user->update([
             'password' => Hash::make($request->password),
         ]);

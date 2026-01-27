@@ -7,20 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderItem;
 
-
-
-/**
- * POST   /api/user/checkout
- */
-class OrderController extends Controller
-{
-
-
-
-
-
-
-
 /**
  * Summary of checkout
  * @param Request $request
@@ -28,24 +14,13 @@ class OrderController extends Controller
  */
 
 
+class OrderController extends Controller
+{
 
-/*
-  Key fixes
-  OrderItem uses price (unit price)
-
-  Order uses total_price (sum of all items × quantity)
-
-  No total_price column in order_items → avoids SQL errors
-
-  Stock is decremented correctly
-
-  Cart is cleared after order creation
-
-  Payment validation remains intact
+/**
+ * POST   /api/user/checkout
  */
 
-
-  
 public function checkout(Request $request)
 {
     $user = $request->user();

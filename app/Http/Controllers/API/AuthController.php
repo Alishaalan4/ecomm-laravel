@@ -15,7 +15,7 @@ class AuthController extends Controller
     // register
     public function register(Request $request)
     {
-        $user_exist_check = $request->user();
+        $user_exist_check = User::where('email', $request->email)->first();
         if ($user_exist_check)
         {
             return response()->json([
@@ -66,7 +66,8 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        // delete current user token
+        $request->user()->tokens()->delete();
         return response()->json([
             'msg' => 'User Logged Out'
         ],200);
